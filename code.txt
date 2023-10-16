@@ -1,0 +1,146 @@
+đăng ký
+
+    try
+    {
+        if (ktbt() == false)
+            lbltb.Text = "Tài khoản đã tồn tại. Hãy đổi tên khác ";
+        else
+        {
+            SqlConnection kn = new SqlConnection("Data Source=ADMINISTRATOR;Initial Catalog=SachOnline;Integrated Security=True");
+            if (kn.State == System.Data.ConnectionState.Closed)
+                kn.Open();
+            SqlCommand cmd = kn.CreateCommand();
+            cmd.CommandText = string.Format("INSERT INTO NGUOIDUNG(TENDANGNHAP,MATKHAU) VALUES('{0}','{1}')", txttk.Text, txtmk.Text);
+            int kq = cmd.ExecuteNonQuery();
+            if (kq != 0)  //lbltb.Text = "Dăng ký thành công";
+                Response.Redirect("~/login.aspx");
+            else
+                lbltb.Text = "Lỗi khi đăng ký";
+
+        }
+    }
+    catch (Exception loi)
+    {
+        lbltb.Text = loi.Message;
+
+    }
+}
+//kt bị trùng
+private bool ktbt()
+{
+    SqlConnection kn = new SqlConnection("Data Source=ADMINISTRATOR;Initial Catalog=SachOnline;Integrated Security=True");
+    if (kn.State == System.Data.ConnectionState.Closed)
+        kn.Open();
+    SqlCommand cmd = kn.CreateCommand();
+    cmd.CommandText = "select * FROM NGUOIDUNG where TENDANGNHAP = '" + txttk.Text + "'";
+    SqlDataReader reader = cmd.ExecuteReader();
+    if (reader.Read())
+        return false;
+    return true;
+
+}
+
+đăng nhập 
+
+ 	SqlConnection con;
+            con = new SqlConnection("Data Source=ADMINISTRATOR;Initial Catalog=SachOnline;Integrated Security=True");
+            con.Open();
+            String sql = "SELECT * FROM NguoiDung WHERE TenDangNhap='" + txttk.Text + "' AND MatKhau='" + txtmk.Text + "'";
+            SqlCommand com = new SqlCommand(sql, con);
+            SqlDataReader dr = com.ExecuteReader();
+            bool chk = dr.Read();
+            dr.Close();
+            con.Close();
+            if (chk)
+            {
+                Session.Add("taikhoan", txttk.Text);
+                Session.Add("matkhau", txtmk.Text);
+                Response.Redirect("~/admin/sach.aspx");
+            }
+            else
+            {
+
+                lbltb.Text = "Tài khoản chưa đúng hoặc mật khẩu sai. Bạn vui lòng nhập lại.";
+            }
+
+thêm ảnh
+
+
+protected void DetailsView1_ItemInserted(object sender, DetailsViewInsertedEventArgs e)
+{
+    FileUpload fileupload = (FileUpload)DetailsView1.FindControl("Fileupload1");
+    if (fileupload.ToString() != "")
+    {
+        fileupload.SaveAs(MapPath("/image/" + fileupload.FileName));
+    }
+}
+
+protected void DetailsView1_ItemInserting(object sender, DetailsViewInsertEventArgs e)
+{
+    FileUpload fileupload = (FileUpload)DetailsView1.FindControl("Fileupload1");
+    if (fileupload.ToString() != "")
+    {
+        e.Values["TenFileAnh"] = fileupload.FileName;
+    }
+}
+
+protected void DetailsView1_ItemDeleted(object sender, DetailsViewDeletedEventArgs e)
+{
+    Response.Redirect("~/admin/sach.aspx");
+}
+
+tìm kiếm
+
+<%@ Page Title="" Language="C#" MasterPageFile="~/macdinh.Master" AutoEventWireup="true" CodeBehind="timkiem.aspx.cs" Inherits="TangTanBao_THI_ASP.timkiem" %>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+    <style type="text/css">
+        .auto-style1 {
+            width: 70%;
+        }
+        .auto-style2 {
+            width: 193px;
+        }
+        .auto-style3 {
+            width: 105px;
+        }
+    </style>
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <table align="center" class="auto-style1">
+        <tr>
+            <td class="auto-style3">
+                <asp:Label ID="Label2" runat="server" Text="Nhập tên để tìm: "></asp:Label>
+            </td>
+            <td class="auto-style2">
+                <asp:TextBox ID="TextBox1" runat="server" Width="181px"></asp:TextBox>
+            </td>
+            <td>
+                <asp:Button ID="Button1" runat="server" Text="Tìm" BackColor="#66FFFF" Width="82px" />
+            </td>
+        </tr>
+        <tr>
+           <td colspan="3">
+               <asp:GridView ID="GridView1" runat="server" AutoGenerateColumns="False" DataKeyNames="MaSach" DataSourceID="SqlDataSource1">
+                   <Columns>
+                       <asp:BoundField DataField="MaSach" HeaderText="MaSach" ReadOnly="True" SortExpression="MaSach" />
+                       <asp:BoundField DataField="TenSach" HeaderText="TenSach" SortExpression="TenSach" />
+                       <asp:BoundField DataField="TacGia" HeaderText="TacGia" SortExpression="TacGia" />
+                       <asp:BoundField DataField="Gia" HeaderText="Gia" SortExpression="Gia" />
+                       <asp:BoundField DataField="SoLuong" HeaderText="SoLuong" SortExpression="SoLuong" />
+                       <asp:BoundField DataField="MoTa" HeaderText="MoTa" SortExpression="MoTa" />
+                       <asp:BoundField DataField="TenFileAnh" HeaderText="TenFileAnh" SortExpression="TenFileAnh" />
+                       <asp:BoundField DataField="MaLoai" HeaderText="MaLoai" SortExpression="MaLoai" />
+                       <asp:HyperLinkField DataNavigateUrlFields=" MaSach" DataNavigateUrlFormatString="~/admin/xemsach.aspx?MaSach={0}" HeaderText="ChiTIet" Text="Xem" />
+                   </Columns>
+               </asp:GridView>
+               <asp:SqlDataSource ID="SqlDataSource1" runat="server" ConnectionString="<%$ ConnectionStrings:SachOnlineConnectionString %>" SelectCommand="SELECT * FROM [Sach] WHERE ([TenSach] like '%'+@TenSach+'%' )">
+                   <SelectParameters>
+                       <asp:ControlParameter ControlID="TextBox1" Name="TenSach" PropertyName="Text" Type="String" DefaultValue=""/>
+                   </SelectParameters>
+               </asp:SqlDataSource>
+            </td>
+        </tr>
+    </table>
+</asp:Content>
+
+
